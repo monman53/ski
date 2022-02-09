@@ -12,11 +12,12 @@ enum TermType {
 class Term;
 using TermPtr = std::shared_ptr<Term>;
 
-class Term {
+class Term : public std::enable_shared_from_this<Term> {
 public:
   TermType type;
   // Only for type == TermType::App
   const std::shared_ptr<Term> lhs, rhs;
+  std::weak_ptr<Term> parent;
 
   Term(TermType type) : type(type) {
     if (type == TermType::App) {
@@ -27,8 +28,14 @@ public:
   }
 
   Term(TermPtr lhs, TermPtr rhs) : type(TermType::App), lhs(lhs), rhs(rhs) {}
+
+  void set_parent() {
+    lhs->parent = weak_from_this();
+    rhs->parent = weak_from_this();
+  }
 };
 
+// Create a new Term object from same structure as `term`.
 TermPtr copy_term(TermPtr term) {
   if (term->type == TermType::App) {
     auto lhs = copy_term(term->lhs);
@@ -46,7 +53,9 @@ TermPtr make_term(TermType type) { return std::make_shared<Term>(type); }
 TermPtr make_term(TermPtr lhs, TermPtr rhs) {
   lhs = copy_term(lhs);
   rhs = copy_term(rhs);
-  return std::make_shared<Term>(lhs, rhs);
+  auto term = std::make_shared<Term>(lhs, rhs);
+  term->set_parent();
+  return term;
 }
 
 // Wrapper functions for `make_term`.

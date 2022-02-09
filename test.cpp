@@ -18,5 +18,16 @@ int main() {
     assert(term4->lhs != term3);
     assert(term4->lhs != term4->rhs);
   }
+
+  // Parent
+  {
+    auto t0 = make_s();
+    auto t1 = make_k();
+    auto t2 = make_app(t0, t1);
+
+    assert(t2->lhs->parent.lock() == t2);
+    assert(t2->rhs->parent.lock() == t2);
+  }
+
   return 0;
 }
