@@ -16,7 +16,7 @@ class Term : public std::enable_shared_from_this<Term> {
 public:
   TermType type;
   // Only for type == TermType::App
-  const std::shared_ptr<Term> lhs, rhs;
+  std::shared_ptr<Term> lhs, rhs;
   std::weak_ptr<Term> parent;
 
   Term(TermType type) : type(type) {
@@ -29,9 +29,18 @@ public:
 
   Term(TermPtr lhs, TermPtr rhs) : type(TermType::App), lhs(lhs), rhs(rhs) {}
 
+  // TODO: Rename this method.
   void set_parent() {
     lhs->parent = weak_from_this();
     rhs->parent = weak_from_this();
+
+    // TODO: Optimize here. This is only for reduction of S.
+    if (lhs->type == TermType::App) {
+      lhs->set_parent();
+    }
+    if (rhs->type == TermType::App) {
+      rhs->set_parent();
+    }
   }
 };
 
@@ -63,6 +72,44 @@ TermPtr make_s() { return make_term(TermType::S); }
 TermPtr make_k() { return make_term(TermType::K); }
 TermPtr make_i() { return make_term(TermType::I); }
 TermPtr make_app(TermPtr lhs, TermPtr rhs) { return make_term(lhs, rhs); }
+
+TermPtr eval(TermPtr term) {
+  if (term->type == TermType::App) {
+    // Ix -> x
+    if (term->lhs->type == TermType::I) {
+      auto x = term->rhs;
+      return eval(x);
+    }
+
+    // Kxy -> x
+    if (term->lhs->type == TermType::App) {
+      if (term->lhs->lhs->type == TermType::K) {
+        auto x = term->lhs->rhs;
+        return eval(x);
+      }
+    }
+
+    // Sxyz -> xz(yz)
+    if (term->lhs->type == TermType::App) {
+      if (term->lhs->lhs->type == TermType::App) {
+        if (term->lhs->lhs->lhs->type == TermType::S) {
+          auto x = term->lhs->lhs->rhs;
+          auto y = term->lhs->rhs;
+          auto z = term->rhs;
+          // TODO: Optimize here. Only one copy of z is needed.
+          return eval(make_app(make_app(x, z), make_app(y, z)));
+        }
+      }
+    }
+
+    // Other
+    term->lhs = eval(term->lhs);
+    term->rhs = eval(term->rhs);
+    term->set_parent();
+  }
+
+  return term;
+}
 
 std::string term_to_str(TermPtr term) {
   switch (term->type) {

@@ -4,15 +4,13 @@
 #include "ski.hpp"
 
 int main() {
-  TermPtr term = std::make_shared<Term>(TermType::S);
-  std::cout << term_to_str(term) << std::endl;
-
-  term = make_term(term, term);
-  std::cout << term_to_str(term) << std::endl;
-
-  if (term == term->lhs->parent.lock()) {
-    std::cout << "debug" << std::endl;
-  }
-
+  auto i = make_i();
+  auto s = make_s();
+  auto ss = make_app(s, s);
+  auto is = make_app(i, s);
+  auto ii = make_app(i, i);
+  auto isis = make_app(is, is);
+  auto result = eval(isis);
+  std::cout << term_to_str(result) << std::endl;
   return 0;
 }

@@ -29,5 +29,34 @@ int main() {
     assert(t2->rhs->parent.lock() == t2);
   }
 
+  // Eval
+  {
+    auto i = make_i();
+    auto k = make_k();
+    auto s = make_s();
+
+    // I
+    auto ik = make_app(i, k);
+    assert(term_to_str(eval(ik)) == "K");
+
+    // K
+    auto kis = make_app(make_app(k, i), s);
+    assert(term_to_str(eval(kis)) == "I");
+
+    // S
+    auto sski = make_app(make_app(make_app(s, s), k), i);
+    assert(term_to_str(eval(sski)) == "SI(KI)");
+
+    // SKI
+    auto sksk = make_app(make_app(make_app(s, k), s), k);
+    assert(term_to_str(eval(sksk)) == "K");
+
+    auto i_ik_ = make_app(i, make_app(i, k));
+    assert(term_to_str(eval(i_ik_)) == "K");
+
+    auto ik_ik_ = make_app(ik, ik);
+    assert(term_to_str(eval(ik_ik_)) == "KK");
+  }
+
   return 0;
 }
