@@ -56,6 +56,18 @@ int main() {
 
     auto ik_ik_ = make_app(ik, ik);
     assert(term_to_str(eval(ik_ik_)) == "KK");
+
+    // Wikipedia examples
+    auto ski_kis_ =
+        make_app(make_app(make_app(s, k), i), make_app(make_app(k, i), s));
+    assert(term_to_str(eval(ski_kis_)) == "I");
+
+    auto ks_i_sksi__ = make_app(
+        make_app(k, s), make_app(i, make_app(make_app(make_app(s, k), s), i)));
+    assert(term_to_str(eval(ks_i_sksi__)) == "S");
+
+    auto skik = make_app(make_app(make_app(s, k), i), k);
+    assert(term_to_str(eval(skik)) == "K");
   }
 
   return 0;

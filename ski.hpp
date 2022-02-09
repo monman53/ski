@@ -15,8 +15,10 @@ using TermPtr = std::shared_ptr<Term>;
 class Term : public std::enable_shared_from_this<Term> {
 public:
   TermType type;
-  // Only for type == TermType::App
+  // Only for `type == TermType::App`
   std::shared_ptr<Term> lhs, rhs;
+
+  // Parent weak pointer
   std::weak_ptr<Term> parent;
 
   Term(TermType type) : type(type) {
@@ -34,7 +36,7 @@ public:
     lhs->parent = weak_from_this();
     rhs->parent = weak_from_this();
 
-    // TODO: Optimize here. This is only for reduction of S.
+    // TODO: Optimize here. This is only for reduction of S (?).
     if (lhs->type == TermType::App) {
       lhs->set_parent();
     }
@@ -73,6 +75,7 @@ TermPtr make_k() { return make_term(TermType::K); }
 TermPtr make_i() { return make_term(TermType::I); }
 TermPtr make_app(TermPtr lhs, TermPtr rhs) { return make_term(lhs, rhs); }
 
+// TODO: Use stack rather than function call for optimization.
 TermPtr eval(TermPtr term) {
   if (term->type == TermType::App) {
     // Ix -> x
@@ -108,6 +111,7 @@ TermPtr eval(TermPtr term) {
     term->set_parent();
   }
 
+  // Atoms
   return term;
 }
 
