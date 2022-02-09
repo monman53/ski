@@ -49,6 +49,12 @@ TermPtr make_term(TermPtr lhs, TermPtr rhs) {
   return std::make_shared<Term>(lhs, rhs);
 }
 
+// Wrapper functions for `make_term`.
+TermPtr make_s() { return make_term(TermType::S); }
+TermPtr make_k() { return make_term(TermType::K); }
+TermPtr make_i() { return make_term(TermType::I); }
+TermPtr make_app(TermPtr lhs, TermPtr rhs) { return make_term(lhs, rhs); }
+
 std::string term_to_str(TermPtr term) {
   switch (term->type) {
   case TermType::S:
