@@ -18,9 +18,6 @@ public:
   // Only for `type == TermType::App`
   std::shared_ptr<Term> lhs, rhs;
 
-  // Parent weak pointer
-  std::weak_ptr<Term> parent;
-
   Term(TermType type) : type(type) {
     if (type == TermType::App) {
       std::cerr << "Term construction with TermType::App is not supported."
@@ -30,20 +27,6 @@ public:
   }
 
   Term(TermPtr lhs, TermPtr rhs) : type(TermType::App), lhs(lhs), rhs(rhs) {}
-
-  // TODO: Rename this method.
-  void set_parent() {
-    lhs->parent = weak_from_this();
-    rhs->parent = weak_from_this();
-
-    // TODO: Optimize here. This is only for reduction of S (?).
-    if (lhs->type == TermType::App) {
-      lhs->set_parent();
-    }
-    if (rhs->type == TermType::App) {
-      rhs->set_parent();
-    }
-  }
 };
 
 // Create a new Term object from same structure as `term`.
@@ -65,7 +48,6 @@ TermPtr make_term(TermPtr lhs, TermPtr rhs) {
   lhs = copy_term(lhs);
   rhs = copy_term(rhs);
   auto term = std::make_shared<Term>(lhs, rhs);
-  term->set_parent();
   return term;
 }
 
@@ -108,7 +90,6 @@ TermPtr eval(TermPtr term) {
     // Other
     term->lhs = eval(term->lhs);
     term->rhs = eval(term->rhs);
-    term->set_parent();
   }
 
   // Atoms
