@@ -1,3 +1,6 @@
+#ifndef __SKI_HPP_
+#define __SKI_HPP_
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -29,6 +32,26 @@ public:
   Term(TermPtr lhs, TermPtr rhs) : type(TermType::App), lhs(lhs), rhs(rhs) {}
 };
 
+std::string term_to_str(TermPtr term) {
+  switch (term->type) {
+  case TermType::S:
+    return "S";
+  case TermType::K:
+    return "K";
+  case TermType::I:
+    return "I";
+  }
+
+  const auto lstr = term_to_str(term->lhs);
+  const auto rstr = term_to_str(term->rhs);
+
+  if (term->rhs->type == TermType::App) {
+    return lstr + "(" + rstr + ")";
+  } else {
+    return lstr + rstr;
+  }
+}
+
 // Create a new Term object from same structure as `term`.
 TermPtr copy_term(TermPtr term) {
   if (term->type == TermType::App) {
@@ -58,19 +81,25 @@ TermPtr make_i() { return make_term(TermType::I); }
 TermPtr make_app(TermPtr lhs, TermPtr rhs) { return make_term(lhs, rhs); }
 
 // TODO: Use stack rather than function call for optimization.
-TermPtr eval(TermPtr term) {
+bool eval_(TermPtr term) {
   if (term->type == TermType::App) {
     // Ix -> x
     if (term->lhs->type == TermType::I) {
       auto x = term->rhs;
-      return eval(x);
+      term->type = x->type;
+      term->lhs = x->lhs;
+      term->rhs = x->rhs;
+      return true;
     }
 
     // Kxy -> x
     if (term->lhs->type == TermType::App) {
       if (term->lhs->lhs->type == TermType::K) {
         auto x = term->lhs->rhs;
-        return eval(x);
+        term->type = x->type;
+        term->lhs = x->lhs;
+        term->rhs = x->rhs;
+        return true;
       }
     }
 
@@ -82,36 +111,39 @@ TermPtr eval(TermPtr term) {
           auto y = term->lhs->rhs;
           auto z = term->rhs;
           // TODO: Optimize here. Only one copy of z is needed.
-          return eval(make_app(make_app(x, z), make_app(y, z)));
+          auto new_term = make_app(make_app(x, z), make_app(y, z));
+          term->type = new_term->type;
+          term->lhs = new_term->lhs;
+          term->rhs = new_term->rhs;
+          return true;
         }
       }
     }
 
     // Other
-    term->lhs = eval(term->lhs);
-    term->rhs = eval(term->rhs);
+    return eval_(term->lhs) || eval_(term->rhs);
   }
 
   // Atoms
+  return false;
+}
+
+TermPtr eval(TermPtr term) {
+  while (eval_(term)) {
+  };
   return term;
 }
 
-std::string term_to_str(TermPtr term) {
-  switch (term->type) {
-  case TermType::S:
-    return "S";
-  case TermType::K:
-    return "K";
-  case TermType::I:
-    return "I";
-  }
-
-  const auto lstr = term_to_str(term->lhs);
-  const auto rstr = term_to_str(term->rhs);
-
-  if (term->rhs->type == TermType::App) {
-    return lstr + "(" + rstr + ")";
+bool same(TermPtr a, TermPtr b) {
+  if (a->type == TermType::App) {
+    if (b->type == TermType::App) {
+      return same(a->lhs, b->lhs) && same(a->rhs, b->rhs);
+    } else {
+      return false;
+    }
   } else {
-    return lstr + rstr;
+    return a->type == b->type;
   }
 }
+
+#endif

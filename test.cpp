@@ -2,6 +2,19 @@
 #include <iostream>
 
 #include "ski.hpp"
+#include "skilib.hpp"
+
+// Test if evaluated `actual` term is equal to `expected` term.
+void assert_eval(TermPtr actual, TermPtr expected) {
+  auto actual_str = term_to_str(actual);
+  auto evaluated_actual = eval(actual);
+  if (!same(evaluated_actual, expected)) {
+    std::cerr << "Term " << actual_str << " is not reduced to "
+              << term_to_str(expected) << "." << std::endl;
+    std::cerr << "actual  : " << term_to_str(evaluated_actual) << std::endl;
+    std::cerr << "expected: " << term_to_str(expected) << std::endl;
+  }
+}
 
 int main() {
   // Term class
@@ -58,6 +71,25 @@ int main() {
 
     auto skik = make_app(make_app(make_app(s, k), i), k);
     assert(term_to_str(eval(skik)) == "K");
+  }
+
+  // SKI lib
+  {
+    // NOT
+    assert_eval(make_app(NOT, TRUE), FALSE);
+    assert_eval(make_app(NOT, FALSE), TRUE);
+
+    // OR
+    assert_eval(make_app(make_app(OR, FALSE), FALSE), FALSE);
+    assert_eval(make_app(make_app(OR, FALSE), TRUE), TRUE);
+    assert_eval(make_app(make_app(OR, TRUE), FALSE), TRUE);
+    assert_eval(make_app(make_app(OR, TRUE), TRUE), TRUE);
+
+    // AND
+    assert_eval(make_app(make_app(AND, FALSE), FALSE), FALSE);
+    assert_eval(make_app(make_app(AND, FALSE), TRUE), FALSE);
+    assert_eval(make_app(make_app(AND, TRUE), FALSE), FALSE);
+    assert_eval(make_app(make_app(AND, TRUE), TRUE), TRUE);
   }
 
   return 0;
