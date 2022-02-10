@@ -30,27 +30,27 @@ public:
   }
 
   Term(TermPtr lhs, TermPtr rhs) : type(TermType::App), lhs(lhs), rhs(rhs) {}
+
+  std::string to_string() {
+    switch (type) {
+    case TermType::S:
+      return "S";
+    case TermType::K:
+      return "K";
+    case TermType::I:
+      return "I";
+    }
+
+    const auto lstr = lhs->to_string();
+    const auto rstr = rhs->to_string();
+
+    if (rhs->type == TermType::App) {
+      return lstr + "(" + rstr + ")";
+    } else {
+      return lstr + rstr;
+    }
+  }
 };
-
-std::string term_to_str(TermPtr term) {
-  switch (term->type) {
-  case TermType::S:
-    return "S";
-  case TermType::K:
-    return "K";
-  case TermType::I:
-    return "I";
-  }
-
-  const auto lstr = term_to_str(term->lhs);
-  const auto rstr = term_to_str(term->rhs);
-
-  if (term->rhs->type == TermType::App) {
-    return lstr + "(" + rstr + ")";
-  } else {
-    return lstr + rstr;
-  }
-}
 
 // Create a new Term object from same structure as `term`.
 TermPtr copy_term(TermPtr term) {
@@ -73,12 +73,6 @@ TermPtr make_term(TermPtr lhs, TermPtr rhs) {
   auto term = std::make_shared<Term>(lhs, rhs);
   return term;
 }
-
-// Wrapper functions for `make_term`.
-TermPtr make_s() { return make_term(TermType::S); }
-TermPtr make_k() { return make_term(TermType::K); }
-TermPtr make_i() { return make_term(TermType::I); }
-TermPtr make_app(TermPtr lhs, TermPtr rhs) { return make_term(lhs, rhs); }
 
 // TODO: Use stack rather than function call for optimization.
 bool eval_(TermPtr term) {
@@ -111,7 +105,7 @@ bool eval_(TermPtr term) {
           auto y = term->lhs->rhs;
           auto z = term->rhs;
           // TODO: Optimize here. Only one copy of z is needed.
-          auto new_term = make_app(make_app(x, z), make_app(y, z));
+          auto new_term = make_term(make_term(x, z), make_term(y, z));
           term->type = new_term->type;
           term->lhs = new_term->lhs;
           term->rhs = new_term->rhs;
