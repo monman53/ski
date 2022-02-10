@@ -5,9 +5,10 @@
 #include "skilib.hpp"
 
 // Test if evaluated `actual` term is equal to `expected` term.
-void assert_eval(TermPtr actual, TermPtr expected) {
+void assert_eval(const TermPtr &actual, const TermPtr &expected) {
   auto actual_str = actual->to_string();
-  auto evaluated_actual = eval(actual);
+  auto actual_ = copy_term(actual);
+  auto &evaluated_actual = eval(actual_);
   if (!same(evaluated_actual, expected)) {
     std::cerr << "Term " << actual_str << " is not reduced to "
               << expected->to_string() << "." << std::endl;
@@ -17,9 +18,10 @@ void assert_eval(TermPtr actual, TermPtr expected) {
   }
 }
 
-void assert_eval(TermPtr actual, std::string expected) {
+void assert_eval(const TermPtr &actual, std::string expected) {
   auto actual_str = actual->to_string();
-  auto evaluated_actual = eval(actual);
+  auto actual_ = copy_term(actual);
+  auto &evaluated_actual = eval(actual_);
   auto evaluated_actual_str = evaluated_actual->to_string();
   if (evaluated_actual_str != expected) {
     std::cerr << "Term " << actual_str << " is not reduced to " << expected
